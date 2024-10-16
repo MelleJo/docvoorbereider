@@ -1,17 +1,11 @@
 import streamlit as st
-from document_manager import render_document_manager
 from document_bundler import render_document_bundler
 
 def main():
     st.set_page_config(page_title="Offerte documenten tool", page_icon="📁", layout="wide")
     
-    st.sidebar.title("Navigatie")
-    page = st.sidebar.radio("Ga naar", ["Document Bundelen", "Document Beheer"])
-
-    if page == "Document Bundelen":
-        render_document_bundler()
-    elif page == "Document Beheer":
-        render_document_manager()
+    st.title("Offerte documenten tool")
+    render_document_bundler()
 
     st.sidebar.info("Dit is nog maar een test :)")
 

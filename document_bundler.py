@@ -1,55 +1,54 @@
 import streamlit as st
-import os
-import zipfile
 import io
-from document_manager import load_document_mapping, DOCUMENTS_DIR
+import zipfile
+from create_drive_service import drive_service, get_file_content
 
-def bundle_documents(quote_type):
-    mapping = load_document_mapping()
-    if quote_type not in mapping:
-        st.error(f"Offertesoort '{quote_type}' niet gevonden.")
-        return None
+DOCUMENTS_FOLDER_ID = "your_google_drive_folder_id_here"  # Replace with your actual folder ID
 
-    document_files = mapping[quote_type]
+def list_files_in_folder(folder_id):
+    results = drive_service.files().list(
+        q=f"'{folder_id}' in parents and mimeType='application/pdf'",
+        pageSize=1000,
+        fields="nextPageToken, files(id, name)"
+    ).execute()
+    return results.get('files', [])
+
+def bundle_documents(selected_files):
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-        for doc in document_files:
-            file_path = os.path.join(DOCUMENTS_DIR, doc)
-            if os.path.exists(file_path):
-                zip_file.write(file_path, doc)
-            else:
-                st.warning(f"Document '{doc}' niet gevonden en overgeslagen.")
+        for file in selected_files:
+            file_content = get_file_content(file['id'])
+            zip_file.writestr(file['name'], file_content)
     
     zip_buffer.seek(0)
     return zip_buffer
 
 def render_document_bundler():
-    st.title("Offerte documenten tool")
-    st.write("Selecteer een offertesoort om de vereiste documenten te bundelen.")
+    st.write("Selecteer de documenten die u wilt bundelen.")
 
-    mapping = load_document_mapping()
-    quote_type = st.selectbox("Selecteer offertesoort:", [""] + list(mapping.keys()))
+    files = list_files_in_folder(DOCUMENTS_FOLDER_ID)
+    file_names = [file['name'] for file in files]
     
-    if quote_type:
-        st.write("Documenten in deze bundel:")
-        for doc in mapping[quote_type]:
-            st.write(f"- {doc}")
-
+    selected_file_names = st.multiselect("Selecteer documenten:", file_names)
+    
+    if selected_file_names:
+        selected_files = [file for file in files if file['name'] in selected_file_names]
+        
         if st.button("Bundel Documenten"):
-            with st.spinner(f"Documenten worden gebundeld voor {quote_type}..."):
-                bundled_docs = bundle_documents(quote_type)
+            with st.spinner("Documenten worden gebundeld..."):
+                bundled_docs = bundle_documents(selected_files)
                 if bundled_docs:
                     st.success("Documenten succesvol gebundeld!")
                     st.download_button(
                         label="Download gebundelde documenten",
                         data=bundled_docs,
-                        file_name=f"{quote_type}_documenten.zip",
+                        file_name="gebundelde_documenten.zip",
                         mime="application/zip"
                     )
                 else:
                     st.error("Er is een fout opgetreden bij het bundelen van de documenten.")
     else:
-        st.info("Selecteer een offertesoort om te beginnen.")
+        st.info("Selecteer minimaal één document om te bundelen.")
 
 if __name__ == "__main__":
     render_document_bundler()

@@ -1,10 +1,9 @@
 import streamlit as st
-import os
 import json
-import shutil
+from create_drive_service import drive_service, list_files_in_folder
 
-DOCUMENTS_DIR = "documents"
 MAPPING_FILE = "document_mapping.json"
+DOCUMENTS_FOLDER_ID = "your_google_drive_folder_id_here"  # Replace with your actual folder ID
 
 def load_document_mapping():
     try:
@@ -21,6 +20,7 @@ def render_document_manager():
     st.title("Document Beheer")
 
     mapping = load_document_mapping()
+    drive_files = list_files_in_folder(DOCUMENTS_FOLDER_ID)
 
     col1, col2 = st.columns(2)
 
@@ -51,30 +51,21 @@ def render_document_manager():
                 col1.write(doc)
                 if col2.button("Verwijderen", key=f"remove_{quote_type}_{doc}"):
                     documents.remove(doc)
-                    file_path = os.path.join(DOCUMENTS_DIR, doc)
-                    if os.path.exists(file_path):
-                        os.remove(file_path)
                     save_document_mapping(mapping)
                     st.success(f"Document '{doc}' verwijderd uit {quote_type}.")
                     st.rerun()
 
-            uploaded_file = st.file_uploader(f"Document toevoegen aan {quote_type}", key=f"upload_{quote_type}")
-            if uploaded_file:
-                if uploaded_file.name.lower().endswith('.pdf'):
-                    file_path = os.path.join(DOCUMENTS_DIR, uploaded_file.name)
-                    with open(file_path, "wb") as f:
-                        f.write(uploaded_file.getbuffer())
-                    if uploaded_file.name not in documents:
-                        documents.append(uploaded_file.name)
-                        save_document_mapping(mapping)
-                        st.success(f"Document '{uploaded_file.name}' toegevoegd aan {quote_type}.")
-                    else:
-                        st.warning(f"Document '{uploaded_file.name}' is vervangen.")
+            available_files = [file['name'] for file in drive_files if file['name'] not in documents]
+            selected_file = st.selectbox(f"Document toevoegen aan {quote_type}", [""] + available_files, key=f"select_{quote_type}")
+            
+            if selected_file and st.button("Toevoegen", key=f"add_{quote_type}"):
+                if selected_file not in documents:
+                    documents.append(selected_file)
+                    save_document_mapping(mapping)
+                    st.success(f"Document '{selected_file}' toegevoegd aan {quote_type}.")
                     st.rerun()
                 else:
-                    st.error("Alleen PDF-bestanden zijn toegestaan.")
+                    st.warning(f"Document '{selected_file}' is al toegevoegd aan {quote_type}.")
 
 if __name__ == "__main__":
-    if not os.path.exists(DOCUMENTS_DIR):
-        os.makedirs(DOCUMENTS_DIR)
     render_document_manager()
