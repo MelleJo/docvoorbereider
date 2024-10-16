@@ -37,7 +37,7 @@ def render_document_bundler():
     </style>
     """, unsafe_allow_html=True)
 
-    st.title("Document Bundel App")
+    st.title("Offerte documenten tool")
     st.write("Selecteer een offertesoort om de vereiste documenten te bundelen.")
 
     quote_type = st.selectbox("Selecteer offertesoort:", list(document_mapping.keys()))
