@@ -3,7 +3,7 @@ from document_manager import render_document_manager
 from document_bundler import render_document_bundler
 
 def main():
-    st.set_page_config(page_title="Document Bundel App", page_icon="📁", layout="wide")
+    st.set_page_config(page_title="Offerte documenten tool", page_icon="📁", layout="wide")
     
     st.sidebar.title("Navigatie")
     page = st.sidebar.radio("Ga naar", ["Document Bundelen", "Document Beheer"])
@@ -13,7 +13,7 @@ def main():
     elif page == "Document Beheer":
         render_document_manager()
 
-    st.sidebar.info("Deze applicatie is ontwikkeld om het bundelen van documenten te vereenvoudigen.")
+    st.sidebar.info("Dit is nog maar een test :)")
 
 if __name__ == "__main__":
     try:
