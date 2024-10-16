@@ -24,7 +24,7 @@ def bundle_documents(quote_type):
     return zip_buffer
 
 def render_document_bundler():
-    st.title("Document Bundel App")
+    st.title("Offerte documenten tool")
     st.write("Selecteer een offertesoort om de vereiste documenten te bundelen.")
 
     mapping = load_document_mapping()
